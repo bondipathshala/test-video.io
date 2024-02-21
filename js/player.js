@@ -52,6 +52,5 @@ function stopVideo() {
 
 function distroyElement() {
   var player = document.getElementById('player')
-    console.log(cnt)
     player.style.disply = "none";
 }
