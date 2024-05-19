@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Video Player</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/3.2.1/shaka-player.compiled.js"></script>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; position: relative; }
+        #video { width: 80%; height: auto; }
+        .loading-overlay { 
+            display: flex; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0, 0, 0, 0.8); 
+            color: white; 
+            font-size: 1.5rem; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        .controls { 
+            position: absolute; 
+            bottom: 10px; 
+            display: flex; 
+            justify-content: center; 
+            width: 100%; 
+        }
+        .controls button { 
+            background-color: #333; 
+            color: white; 
+            border: none; 
+            padding: 10px; 
+            margin: 0 5px; 
+            cursor: pointer; 
+        }
+        .controls button:hover { 
+            background-color: #555; 
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay">Loading...</div>
+    <video id="video" controls disablePictureInPicture controlsList="nodownload"></video>
+    <div class="controls">
+        <button id="backward">-10s</button>
+        <button id="forward">+10s</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', setupVideo);
+
+        async function setupVideo() {
+            const video = document.getElementById('video');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const forwardButton = document.getElementById('forward');
+            const backwardButton = document.getElementById('backward');
+
+            loadingOverlay.style.display = 'flex';
+
+            try {
+                const [key, iv] = await Promise.all([
+                    fetchArrayBuffer('https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/encryption_key.bin'),
+                    fetchArrayBuffer('https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/iv.bin')
+                ]);
+
+                console.log('Key length:', key.byteLength);  // Should be 32 bytes
+                console.log('Key:', new Uint8Array(key));
+                console.log('IV length:', iv.byteLength);    // Should be 12 bytes
+                console.log('IV:', new Uint8Array(iv));
+
+                // Fetch the encrypted video
+                const encryptedVideo = await fetchArrayBuffer('https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/encrypted_video.mp4');
+
+                // Decrypt the video
+                const decryptedVideo = await decryptChunk(encryptedVideo, key, iv);
+                
+                // Create a Blob URL for the decrypted video
+                const videoBlob = new Blob([decryptedVideo], { type: 'video/mp4' });
+                const videoUrl = URL.createObjectURL(videoBlob);
+                video.src = videoUrl;
+
+                loadingOverlay.style.display = 'none';
+
+                // Add event listeners for custom controls
+                forwardButton.addEventListener('click', () => {
+                    video.currentTime += 10;
+                });
+
+                backwardButton.addEventListener('click', () => {
+                    video.currentTime -= 10;
+                });
+
+            } catch (error) {
+                console.error('Setup error:', error);
+                loadingOverlay.textContent = 'Error loading video';
+            }
+        }
+
+        async function fetchArrayBuffer(url) {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+            const arrayBuffer = await response.arrayBuffer();
+            console.log(`Fetched ${arrayBuffer.byteLength} bytes from ${url}`);
+            return arrayBuffer;
+        }
+
+        async function decryptChunk(encryptedChunk, key, iv) {
+            const algorithm = { name: "AES-GCM", iv: new Uint8Array(iv) };
+            const cryptoKey = await crypto.subtle.importKey("raw", key, algorithm, false, ["decrypt"]);
+            try {
+                console.log('Decrypting chunk of length:', encryptedChunk.byteLength);
+                const decryptedData = await crypto.subtle.decrypt(algorithm, cryptoKey, encryptedChunk);
+                return new Uint8Array(decryptedData);
+            } catch (error) {
+                console.error('Decryption failed:', error);
+                throw error;
+            }
+        }
+    </script>
+</body>
+</html>
