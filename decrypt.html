@@ -1,124 +1,96 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Video Player</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/3.2.1/shaka-player.compiled.js"></script>
-    <style>
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; position: relative; }
-        #video { width: 80%; height: auto; }
-        .loading-overlay { 
-            display: flex; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(0, 0, 0, 0.8); 
-            color: white; 
-            font-size: 1.5rem; 
-            justify-content: center; 
-            align-items: center; 
+    <title>HLS Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
+    <script>
+        // JavaScript code starts here
+        document.addEventListener('DOMContentLoaded', () => {
+    const manifestUri = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/output/manifest.m3u8'; // Replace with your HLS manifest URL
+    const keyUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/output/enc.key';               // Replace with your key URL
+    const ivUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/output/enc.iv';   
+
+
+    shaka.polyfill.installAll(); // Install polyfills for older browsers
+
+    if (!shaka.Player.isBrowserSupported()) {
+        showError('This browser does not support the video format.');
+        return;
+    }
+
+    const video = document.getElementById('video');
+    const player = new shaka.Player(video);
+    let errorContainer; // Initialize errorContainer variable
+
+    // Optional: Set logging level
+    if (shaka.log) {
+        shaka.log.setLevel(shaka.log.Level.V2); // Detailed logging
+    }
+
+    // Register decryption response filter
+    player.getNetworkingEngine().registerResponseFilter(async (type, response) => {
+        if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT) {
+            try {
+                const [key, iv] = await Promise.all([fetchKey(keyUrl), fetchIV(ivUrl)]);
+                const cryptoKey = await crypto.subtle.importKey('raw', key, { name: 'AES-CTR' }, false, ['decrypt']);
+                response.data = await crypto.subtle.decrypt({ name: 'AES-CTR', counter: iv, length: 64 }, cryptoKey, response.data);
+            } catch (error) {
+                showError(`Decryption Error: ${error.message}`);
+                throw error; // Re-throw for Shaka Player error handling
+            }
         }
-        .controls { 
-            position: absolute; 
-            bottom: 10px; 
-            display: flex; 
-            justify-content: center; 
-            width: 100%; 
+    });
+
+    // Load and play the video
+    player.load(manifestUri)
+        .then(() => console.log('Video loaded successfully!'))
+        .catch(error => showError(`Error loading video: ${getShakaErrorMessage(error)}`));
+
+    // Fetch key function (adjust for your authentication/storage method if needed)
+    async function fetchKey(url) {
+        const response = await fetch(url); // Or use your own fetching method
+        if (!response.ok) {
+            throw new Error(`Failed to fetch key from ${url}: ${response.status} ${response.statusText}`);
         }
-        .controls button { 
-            background-color: #333; 
-            color: white; 
-            border: none; 
-            padding: 10px; 
-            margin: 0 5px; 
-            cursor: pointer; 
+        return await response.arrayBuffer();
+    }
+
+    // Fetch IV function (adjust if you use a different IV delivery mechanism)
+    async function fetchIV(url) {
+        const response = await fetch(url); // Or use your own fetching method
+        if (!response.ok) {
+            throw new Error(`Failed to fetch IV from ${url}: ${response.status} ${response.statusText}`);
         }
-        .controls button:hover { 
-            background-color: #555; 
+        const ivHex = await response.text();
+        return new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    }
+
+    // Error handling function
+    function showError(message) {
+        console.error(message);
+        errorContainer = document.getElementById('errorContainer'); // Get errorContainer inside the function
+        if (errorContainer) {
+            errorContainer.textContent = message;
+            errorContainer.style.display = 'block'; // Show error message on screen
+        } else {
+            console.error("Error container element not found. Cannot display error message.");
         }
-    </style>
+    }
+   
+    function getShakaErrorMessage(error) {
+        if (error.code) {
+            return `${error.code} - ${error.message}`;
+        } else {
+            return error.message || 'Unknown error';
+        }
+    }
+});
+        // JavaScript code ends here
+    </script>
 </head>
 <body>
-    <div id="loading-overlay">Loading...</div>
-    <video id="video" controls disablePictureInPicture controlsList="nodownload"></video>
-    <div class="controls">
-        <button id="backward">-10s</button>
-        <button id="forward">+10s</button>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', setupVideo);
-
-        async function setupVideo() {
-            const video = document.getElementById('video');
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const forwardButton = document.getElementById('forward');
-            const backwardButton = document.getElementById('backward');
-
-            loadingOverlay.style.display = 'flex';
-
-            try {
-                const [key, iv] = await Promise.all([
-                    fetchArrayBuffer('https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/encryption_key.bin'),
-                    fetchArrayBuffer('https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/iv.bin')
-                ]);
-
-                console.log('Key length:', key.byteLength);  // Should be 32 bytes
-                console.log('Key:', new Uint8Array(key));
-                console.log('IV length:', iv.byteLength);    // Should be 12 bytes
-                console.log('IV:', new Uint8Array(iv));
-
-                // Fetch the encrypted video
-                const encryptedVideo = await fetchArrayBuffer('https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/encrypted_video.mp4');
-
-                // Decrypt the video
-                const decryptedVideo = await decryptChunk(encryptedVideo, key, iv);
-                
-                // Create a Blob URL for the decrypted video
-                const videoBlob = new Blob([decryptedVideo], { type: 'video/mp4' });
-                const videoUrl = URL.createObjectURL(videoBlob);
-                video.src = videoUrl;
-
-                loadingOverlay.style.display = 'none';
-
-                // Add event listeners for custom controls
-                forwardButton.addEventListener('click', () => {
-                    video.currentTime += 10;
-                });
-
-                backwardButton.addEventListener('click', () => {
-                    video.currentTime -= 10;
-                });
-
-            } catch (error) {
-                console.error('Setup error:', error);
-                loadingOverlay.textContent = 'Error loading video';
-            }
-        }
-
-        async function fetchArrayBuffer(url) {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-            const arrayBuffer = await response.arrayBuffer();
-            console.log(`Fetched ${arrayBuffer.byteLength} bytes from ${url}`);
-            return arrayBuffer;
-        }
-
-        async function decryptChunk(encryptedChunk, key, iv) {
-            const algorithm = { name: "AES-GCM", iv: new Uint8Array(iv) };
-            const cryptoKey = await crypto.subtle.importKey("raw", key, algorithm, false, ["decrypt"]);
-            try {
-                console.log('Decrypting chunk of length:', encryptedChunk.byteLength);
-                const decryptedData = await crypto.subtle.decrypt(algorithm, cryptoKey, encryptedChunk);
-                return new Uint8Array(decryptedData);
-            } catch (error) {
-                console.error('Decryption failed:', error);
-                throw error;
-            }
-        }
-    </script>
+    <video id="video" width="640" height="360" controls></video>
+    <div id="errorContainer" style="display: none; color: red;"></div> 
 </body>
 </html>
