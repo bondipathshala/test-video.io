@@ -1,96 +1,219 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>HLS Player</title>
-    <script src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
-    <script>
-        // JavaScript code starts here
-        document.addEventListener('DOMContentLoaded', () => {
-    const manifestUri = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/output/manifest.m3u8'; // Replace with your HLS manifest URL
-    const keyUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/output/enc.key';               // Replace with your key URL
-    const ivUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/output/enc.iv';   
-
-
-    shaka.polyfill.installAll(); // Install polyfills for older browsers
-
-    if (!shaka.Player.isBrowserSupported()) {
-        showError('This browser does not support the video format.');
-        return;
-    }
-
-    const video = document.getElementById('video');
-    const player = new shaka.Player(video);
-    let errorContainer; // Initialize errorContainer variable
-
-    // Optional: Set logging level
-    if (shaka.log) {
-        shaka.log.setLevel(shaka.log.Level.V2); // Detailed logging
-    }
-
-    // Register decryption response filter
-    player.getNetworkingEngine().registerResponseFilter(async (type, response) => {
-        if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT) {
-            try {
-                const [key, iv] = await Promise.all([fetchKey(keyUrl), fetchIV(ivUrl)]);
-                const cryptoKey = await crypto.subtle.importKey('raw', key, { name: 'AES-CTR' }, false, ['decrypt']);
-                response.data = await crypto.subtle.decrypt({ name: 'AES-CTR', counter: iv, length: 64 }, cryptoKey, response.data);
-            } catch (error) {
-                showError(`Decryption Error: ${error.message}`);
-                throw error; // Re-throw for Shaka Player error handling
-            }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-    });
-
-    // Load and play the video
-    player.load(manifestUri)
-        .then(() => console.log('Video loaded successfully!'))
-        .catch(error => showError(`Error loading video: ${getShakaErrorMessage(error)}`));
-
-    // Fetch key function (adjust for your authentication/storage method if needed)
-    async function fetchKey(url) {
-        const response = await fetch(url); // Or use your own fetching method
-        if (!response.ok) {
-            throw new Error(`Failed to fetch key from ${url}: ${response.status} ${response.statusText}`);
+        #videoContainer {
+            position: relative;
+            width: 80%;
+            max-width: 800px;
+            background-color: black;
         }
-        return await response.arrayBuffer();
-    }
-
-    // Fetch IV function (adjust if you use a different IV delivery mechanism)
-    async function fetchIV(url) {
-        const response = await fetch(url); // Or use your own fetching method
-        if (!response.ok) {
-            throw new Error(`Failed to fetch IV from ${url}: ${response.status} ${response.statusText}`);
+        #video {
+            width: 100%;
+            height: auto;
         }
-        const ivHex = await response.text();
-        return new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    }
-
-    // Error handling function
-    function showError(message) {
-        console.error(message);
-        errorContainer = document.getElementById('errorContainer'); // Get errorContainer inside the function
-        if (errorContainer) {
-            errorContainer.textContent = message;
-            errorContainer.style.display = 'block'; // Show error message on screen
-        } else {
-            console.error("Error container element not found. Cannot display error message.");
+        #controlsContainer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            visibility: hidden; /* Hide initially */
         }
-    }
-   
-    function getShakaErrorMessage(error) {
-        if (error.code) {
-            return `${error.code} - ${error.message}`;
-        } else {
-            return error.message || 'Unknown error';
+        #videoContainer:hover #controlsContainer,
+        #controlsContainer:hover {
+            visibility: visible; /* Show on hover */
         }
-    }
-});
-        // JavaScript code ends here
-    </script>
+        .controlButton {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        #seekBar {
+            flex-grow: 1;
+            margin: 0 10px;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            background: #ccc;
+            outline: none;
+            cursor: pointer;
+        }
+        #seekBar::-webkit-slider-thumb {
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            cursor: pointer;
+        }
+        #timeDisplay {
+            color: white;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-    <video id="video" width="640" height="360" controls></video>
+    <div id="videoContainer">
+        <video id="video"></video>
+        <div id="controlsContainer">
+            <button class="controlButton" id="backwardButton"><i class="fas fa-undo-alt"></i> 10s</button>
+            <button class="controlButton" id="playPauseButton"><i class="fas fa-play"></i></button>
+            <button class="controlButton" id="forwardButton">10s <i class="fas fa-redo-alt"></i></button>
+            <input type="range" id="seekBar" value="0">
+            <div id="timeDisplay">00:00 / 00:00</div>
+            <button class="controlButton" id="volumeButton"><i class="fas fa-volume-up"></i></button>
+            <button class="controlButton" id="fullscreenButton"><i class="fas fa-expand"></i></button>
+        </div>
+    </div>
     <div id="errorContainer" style="display: none; color: red;"></div> 
+
+    <script src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const manifestUri = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/output/manifest.m3u8';
+            const keyUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/output/enc.key';
+            const ivUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/output/enc.iv';
+
+            shaka.polyfill.installAll();
+
+            if (!shaka.Player.isBrowserSupported()) {
+                showError('This browser does not support the video format.');
+                return;
+            }
+
+            const video = document.getElementById('video');
+            const player = new shaka.Player(video);
+            let errorContainer;
+
+            video.controls = false; // Disable default controls
+
+            if (shaka.log) {
+                shaka.log.setLevel(shaka.log.Level.V2);
+            }
+
+            player.getNetworkingEngine().registerResponseFilter(async (type, response) => {
+                if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT) {
+                    try {
+                        const [key, iv] = await Promise.all([fetchKey(keyUrl), fetchIV(ivUrl)]);
+                        const cryptoKey = await crypto.subtle.importKey('raw', key, { name: 'AES-CTR' }, false, ['decrypt']);
+                        response.data = await crypto.subtle.decrypt({ name: 'AES-CTR', counter: iv, length: 64 }, cryptoKey, response.data);
+                    } catch (error) {
+                        showError(`Decryption Error: ${error.message}`);
+                        throw error;
+                    }
+                }
+            });
+
+            player.load(manifestUri)
+                .then(() => console.log('Video loaded successfully!'))
+                .catch(error => showError(`Error loading video: ${getShakaErrorMessage(error)}`));
+
+            async function fetchKey(url) {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch key from ${url}: ${response.status} ${response.statusText}`);
+                }
+                return await response.arrayBuffer();
+            }
+
+            async function fetchIV(url) {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch IV from ${url}: ${response.status} ${response.statusText}`);
+                }
+                const ivHex = await response.text();
+                return new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+            }
+
+            function showError(message) {
+                console.error(message);
+                errorContainer = document.getElementById('errorContainer');
+                if (errorContainer) {
+                    errorContainer.textContent = message;
+                    errorContainer.style.display = 'block';
+                } else {
+                    console.error("Error container element not found. Cannot display error message.");
+                }
+            }
+
+            function getShakaErrorMessage(error) {
+                if (error.code) {
+                    return `${error.code} - ${error.message}`;
+                } else {
+                    return error.message || 'Unknown error';
+                }
+            }
+
+            const playPauseButton = document.getElementById('playPauseButton');
+            const forwardButton = document.getElementById('forwardButton');
+            const backwardButton = document.getElementById('backwardButton');
+            const seekBar = document.getElementById('seekBar');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const volumeButton = document.getElementById('volumeButton');
+            const fullscreenButton = document.getElementById('fullscreenButton');
+            const videoContainer = document.getElementById('videoContainer');
+
+            playPauseButton.addEventListener('click', () => {
+                if (video.paused) {
+                    video.play();
+                    playPauseButton.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    video.pause();
+                    playPauseButton.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+
+            forwardButton.addEventListener('click', () => {
+                video.currentTime += 10;
+            });
+
+            backwardButton.addEventListener('click', () => {
+                video.currentTime -= 10;
+            });
+
+            video.addEventListener('timeupdate', () => {
+                seekBar.value = (video.currentTime / video.duration) * 100;
+                timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
+            });
+
+            seekBar.addEventListener('input', () => {
+                video.currentTime = (seekBar.value / 100) * video.duration;
+            });
+
+            volumeButton.addEventListener('click', () => {
+                video.muted = !video.muted;
+                volumeButton.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+            });
+
+            fullscreenButton.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    videoContainer.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+        });
+    </script>
 </body>
 </html>
