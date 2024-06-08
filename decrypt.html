@@ -224,12 +224,12 @@
                 });
 
                 video.addEventListener('timeupdate', () => {
-                    seekBar.value = (video.currentTime / video.duration) * 100;
+                    seekBar.value = (video.currentTime / video.duration) * 10;
                     timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
                 });
 
                 seekBar.addEventListener('input', () => {
-                    video.currentTime = (seekBar.value / 100) * video.duration;
+                    video.currentTime = (seekBar.value / 10) * video.duration;
                 });
 
                 volumeButton.addEventListener('click', () => {
