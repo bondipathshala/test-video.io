@@ -132,8 +132,8 @@
                 },
                 streaming: {
                     rebufferingGoal: 0.1, // Aim for very low buffering
-                    bufferingGoal: 0.5, // Start playback with a small buffer
-                    safeSeekOffset: 0,  // Allow seeking to the exact position
+                    bufferingGoal: 0.1, // Start playback with a small buffer
+                    safeSeekOffset: 10,  // Allow seeking to the exact position
                     // retryParameters: { // Adjust as needed
                     //     maxAttempts: 5,
                     //     baseDelay: 100, 
@@ -224,12 +224,12 @@
                 });
 
                 video.addEventListener('timeupdate', () => {
-                    seekBar.value = (video.currentTime / video.duration) * 480;
+                    seekBar.value = (video.currentTime / video.duration) * 10;
                     timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
                 });
 
                 seekBar.addEventListener('input', () => {
-                    video.currentTime = (seekBar.value / 480) * video.duration;
+                    video.currentTime = (seekBar.value / 10) * video.duration;
                 });
 
                 volumeButton.addEventListener('click', () => {
