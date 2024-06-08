@@ -116,7 +116,7 @@
                     try {
                         const [key, iv] = await Promise.all([fetchKey(keyUrl), fetchIV(ivUrl)]);
                         const cryptoKey = await crypto.subtle.importKey('raw', key, { name: 'AES-CTR' }, false, ['decrypt']);
-                        response.data = await crypto.subtle.decrypt({ name: 'AES-CTR', counter: iv, length: 10 }, cryptoKey, response.data);
+                        response.data = await crypto.subtle.decrypt({ name: 'AES-CTR', counter: iv, length: 64 }, cryptoKey, response.data);
                     } catch (error) {
                         showError(`Decryption Error: ${error.message}`, errorContainer);
                         throw error; 
