@@ -17,7 +17,7 @@ async function init() {
             'fullscreen',
             'playback_rate',],
         'seekBarColors': {
-            base: 'rgba(255, 128, 0, 0.4)',
+              base: 'rgba(255, 128, 0, 0.4)',
             buffered: 'rgba(255, 255, 255, 0.54)',
             played: 'rgb(0, 255, 255)',
         }
