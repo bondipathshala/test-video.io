@@ -2,7 +2,7 @@ const manifestUri = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/manifes
 const keyUrl = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/enc.key';
 const ivUrl = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/enc.iv';
 
-async function init() {
+async function initial() {
     const video = document.querySelector('video[data-shaka-player]');
     const ui = video['ui'];
     const controls = ui.getControls();
@@ -120,5 +120,7 @@ function initFailed(errorEvent) {
     console.error('Unable to load the UI library!', errorEvent.detail);
 }
 
-
+document.addEventListener('DOMContentLoaded', () => {
+    initial()
+});
 // --- End Video Controls and Functionality ---
