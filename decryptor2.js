@@ -113,7 +113,7 @@ async function fetchIV(url) {
 }
 
 // Event Listeners
-document.addEventListener('shaka-ui-loaded', init);
+document.addEventListener('shaka-ui-loaded', initial);
 document.addEventListener('shaka-ui-load-failed', initFailed);
 
 function initFailed(errorEvent) {
