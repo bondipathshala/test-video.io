@@ -1,6 +1,6 @@
-const manifestUri = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/manifest.m3u8';
-const keyUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/enc.key';
-const ivUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/enc.iv';
+const manifestUri = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/manifest.m3u8';
+const keyUrl = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/enc.key';
+const ivUrl = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/enc.iv';
 
 async function init() {
     const video = document.querySelector('video[data-shaka-player]');
@@ -17,7 +17,7 @@ async function init() {
             'fullscreen',
             'playback_rate',],
         'seekBarColors': {
-              base: 'rgba(255, 128, 0, 0.4)',
+            base: 'rgba(255, 128, 0, 0.4)',
             buffered: 'rgba(255, 255, 255, 0.54)',
             played: 'rgb(0, 255, 255)',
         }
