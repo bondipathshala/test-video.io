@@ -1,306 +1,90 @@
-
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>HLS Player with On-the-Fly Decryption</title>
     <script src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.ui.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/shaka-player/dist/controls.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-        <style>
-         @font-face {
-    font-family: 'Roboto';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url(https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Me5Q.ttf) format('truetype');
-  }
-  @font-face {
-    font-family: 'Roboto';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url(https://fonts.gstatic.com/s/roboto/v27/KFOlCnqEu92Fr1MmEU9vAw.ttf) format('truetype');
-  }
-  .youtube-theme {
-    font-family: 'Roboto', sans-serif;
-  }
-  .youtube-theme .shaka-bottom-controls {
-    width: 100%;
-    padding: 0;
-    padding-bottom: 0;
-    z-index: 1;
-  }
-  .youtube-theme .shaka-bottom-controls {
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-        -ms-flex-direction: column;
-            flex-direction: column;
-  }
-  .youtube-theme .shaka-ad-controls {
-    -webkit-box-ordinal-group: 2;
-        -ms-flex-order: 1;
-            order: 1;
-  }
-  .youtube-theme .shaka-controls-button-panel {
-    -webkit-box-ordinal-group: 3;
-        -ms-flex-order: 2;
-            order: 2;
-    height: 40px;
-    padding: 0 10px;
-  }
-  .youtube-theme .shaka-range-container {
-    margin: 4px 10px 4px 10px;
-    top: 0;
-  }
-  .youtube-theme .shaka-small-play-button {
-    -webkit-box-ordinal-group: -2;
-        -ms-flex-order: -3;
-            order: -3;
-  }
-  .youtube-theme .shaka-mute-button {
-    -webkit-box-ordinal-group: -1;
-        -ms-flex-order: -2;
-            order: -2;
-  }
-  .youtube-theme .shaka-controls-button-panel > * {
-    margin: 0;
-    padding: 3px 8px;
-    color: #EEE;
-    height: 40px;
-  }
-  .youtube-theme .shaka-controls-button-panel > *:focus {
-    outline: none;
-    -webkit-box-shadow: inset 0 0 0 2px rgba(27, 127, 204, 0.8);
-            box-shadow: inset 0 0 0 2px rgba(27, 127, 204, 0.8);
-    color: #FFF;
-  }
-  .youtube-theme .shaka-controls-button-panel > *:hover {
-    color: #FFF;
-  }
-  .youtube-theme .shaka-controls-button-panel .shaka-volume-bar-container {
-    position: relative;
-    z-index: 10;
-    left: -1px;
-    -webkit-box-ordinal-group: 0;
-        -ms-flex-order: -1;
-            order: -1;
-    opacity: 0;
-    width: 0px;
-    -webkit-transition: width 0.2s cubic-bezier(0.4, 0, 1, 1);
-    height: 3px;
-    transition: width 0.2s cubic-bezier(0.4, 0, 1, 1);
-    padding: 0;
-  }
-  .youtube-theme .shaka-controls-button-panel .shaka-volume-bar-container:hover,
-  .youtube-theme .shaka-controls-button-panel .shaka-volume-bar-container:focus {
-    display: block;
-    width: 50px;
-    opacity: 1;
-    padding: 0 6px;
-  }
-  .youtube-theme .shaka-mute-button:hover + div {
-    opacity: 1;
-    width: 50px;
-    padding: 0 6px;
-  }
-  .youtube-theme .shaka-current-time {
-    padding: 0 10px;
-    font-size: 12px;
-  }
-  .youtube-theme .shaka-seek-bar-container {
-    height: 3px;
-    position: relative;
-    top: -1px;
-    border-radius: 0;
-    margin-bottom: 0;
-  }
-  .youtube-theme .shaka-seek-bar-container .shaka-range-element {
-    opacity: 0;
-  }
-  .youtube-theme .shaka-seek-bar-container:hover {
-    height: 5px;
-    top: 0;
-    cursor: pointer;
-  }
-  .youtube-theme .shaka-seek-bar-container:hover .shaka-range-element {
-    opacity: 1;
-    cursor: pointer;
-  }
-  .youtube-theme .shaka-seek-bar-container input[type=range]::-webkit-slider-thumb {
-    background: #00c8ff;
-    cursor: pointer;
-  }
-  .youtube-theme .shaka-seek-bar-container input[type=range]::-moz-range-thumb {
-    background: #00c8ff;
-    cursor: pointer;
-  }
-  .youtube-theme .shaka-seek-bar-container input[type=range]::-ms-thumb {
-    background: #00c8ff;
-    cursor: pointer;
-  }
-  .youtube-theme .shaka-video-container * {
-    font-family: 'Roboto', sans-serif;
-  }
-  .youtube-theme .shaka-video-container .material-icons-round {
-    font-family: 'Material Icons Sharp';
-  }
-  .youtube-theme .shaka-overflow-menu,
-  .youtube-theme .shaka-settings-menu {
-    border-radius: 2px;
-    background: rgba(28, 28, 28, 0.9);
-    text-shadow: 0 0 2px rgb(0 0 0%);
-    -webkit-transition: opacity 0.1s cubic-bezier(0, 0, 0.2, 1);
-    transition: opacity 0.1s cubic-bezier(0, 0, 0.2, 1);
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -webkit-user-select: none;
-    right: 10px;
-    bottom: 50px;
-    padding: 8px 0;
-    min-width: 200px;
-  }
-  .youtube-theme .shaka-settings-menu {
-    padding: 0 0 8px 0;
-  }
-  .youtube-theme .shaka-settings-menu button {
-    font-size: 12px;
-  }
-  .youtube-theme .shaka-settings-menu button span {
-    margin-left: 33px;
-    font-size: 13px;
-  }
-  .youtube-theme .shaka-settings-menu button[aria-selected="true"] {
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-  }
-  .youtube-theme .shaka-settings-menu button[aria-selected="true"] span {
-    -webkit-box-ordinal-group: 3;
-        -ms-flex-order: 2;
-            order: 2;
-    margin-left: 0;
-  }
-  .youtube-theme .shaka-settings-menu button[aria-selected="true"] i {
-    -webkit-box-ordinal-group: 2;
-        -ms-flex-order: 1;
-            order: 1;
-    font-size: 18px;
-    padding-left: 5px;
-  }
-  .youtube-theme .shaka-overflow-menu button {
-    padding: 0;
-  }
-  .youtube-theme .shaka-overflow-menu button i {
-    display: none;
-  }
-  .youtube-theme .shaka-overflow-menu button .shaka-overflow-button-label {
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-box-pack: justify;
-        -ms-flex-pack: justify;
+    <style>
+        body {
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #videoContainer {
+            position: relative;
+            width: 80%;
+            max-width: 800px;
+            background-color: black;
+        }
+
+        #video {
+            width: 100%;
+            height: auto;
+        }
+
+        #controlsContainer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            display: flex;
             justify-content: space-between;
-    -webkit-box-orient: horizontal;
-    -webkit-box-direction: normal;
-        -ms-flex-direction: row;
-            flex-direction: row;
-    -webkit-box-align: center;
-        -ms-flex-align: center;
             align-items: center;
-    cursor: default;
-    outline: none;
-    height: 40px;
-    -webkit-box-flex: 0;
-        -ms-flex: 0 0 100%;
-            flex: 0 0 100%;
-  }
-  .youtube-theme .shaka-overflow-menu button .shaka-overflow-button-label span {
-    -ms-flex-negative: initial;
-        flex-shrink: initial;
-    padding-left: 15px;
-    font-size: 13px;
-    font-weight: 500;
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-box-align: center;
-        -ms-flex-align: center;
-            align-items: center;
-  }
-  .youtube-theme .shaka-overflow-menu span + span {
-    color: #FFF;
-    font-weight: 400 !important;
-    font-size: 12px !important;
-    padding-right: 8px;
-    padding-left: 0 !important;
-  }
-  .youtube-theme .shaka-overflow-menu span + span:after {
-    content: "navigate_next";
-    font-family: 'Material Icons Sharp';
-    font-size: 20px;
-  }
-  .youtube-theme .shaka-overflow-menu .shaka-pip-button span + span {
-    padding-right: 15px !important;
-  }
-  .youtube-theme .shaka-overflow-menu .shaka-pip-button span + span:after {
-    content: "";
-  }
-  .youtube-theme .shaka-back-to-overflow-button {
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    font-size: 12px;
-    color: #eee;
-    height: 40px;
-  }
-  .youtube-theme .shaka-back-to-overflow-button .material-icons-round {
-    font-size: 15px;
-    padding-right: 10px;
-  }
-  .youtube-theme .shaka-back-to-overflow-button span {
-    margin-left: 3px !important;
-  }
-  .youtube-theme .shaka-overflow-menu button:hover,
-  .youtube-theme .shaka-settings-menu button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    cursor: pointer;
-  }
-  .youtube-theme .shaka-overflow-menu button:hover label,
-  .youtube-theme .shaka-settings-menu button:hover label {
-    cursor: pointer;
-  }
-  .youtube-theme .shaka-overflow-menu button:focus,
-  .youtube-theme .shaka-settings-menu button:focus {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: none;
-    outline: none;
-  }
-  .youtube-theme .shaka-overflow-menu button,
-  .youtube-theme .shaka-settings-menu button {
-    color: #EEE;
-  }
-  .youtube-theme .shaka-captions-off {
-    color: #BFBFBF;
-  }
-  .youtube-theme .shaka-overflow-menu-button {
-    font-size: 18px;
-    margin-right: 5px;
-  }
-  .youtube-theme .shaka-fullscreen-button:hover {
-    font-size: 25px;
-    -webkit-transition: font-size 0.1s cubic-bezier(0, 0, 0.2, 1);
-    transition: font-size 0.1s cubic-bezier(0, 0, 0.2, 1);
-  }
-  
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            visibility: hidden;
+            /* Hide initially */
+        }
+
+        #videoContainer:hover #controlsContainer,
+        #controlsContainer:hover {
+            visibility: visible;
+            /* Show on hover */
+        }
+
+        .controlButton {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #seekBar {
+            flex-grow: 1;
+            margin: 0 10px;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            background: #ccc;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #seekBar::-webkit-slider-thumb {
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        #timeDisplay {
+            color: white;
+            font-size: 14px;
+        }
     </style>
 </head>
+
 <body>
-     <div id="videoContainer" class="youtube-theme"> 
-        <video id="video" class="shaka-video-container"></video>
-    </div
-<!--     <div data-shaka-player-container style="max-width:80em;" class="youtube-theme">
-        <video data-shaka-player autoplay style="width:100%;height:100%;"></video>
+    <div id="videoContainer">
+        <video id="video"></video>
         <div id="controlsContainer">
             <button class="controlButton" id="backwardButton"><i class="fas fa-undo-alt"></i> 10s</button>
             <button class="controlButton" id="playPauseButton"><i class="fas fa-play"></i></button>
@@ -311,7 +95,7 @@
             <button class="controlButton" id="fullscreenButton"><i class="fas fa-expand"></i></button>
         </div>
     </div>
-    <div id="errorContainer" style="display: none; color: red;"></div>  -->
+    <div id="errorContainer" style="display: none; color: red;"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -320,7 +104,7 @@
             const ivUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/enc.iv';
 
 
-            shaka.polyfill.installAll(); 
+            shaka.polyfill.installAll();
 
             if (!shaka.Player.isBrowserSupported()) {
                 showError('This browser does not support the video format.', errorContainer);
@@ -328,8 +112,29 @@
             }
 
 
-            const video = document.getElementById('video');
-            const player = new shaka.Player(video);
+            const video = document.querySelector('video[data-shaka-player]');
+            const ui = video['ui'];
+            const controls = ui.getControls();
+            const config = {
+                'enableTooltips': true,
+                'controlPanelElements': [
+                    'play_pause',
+                    'mute',
+                    'volume',
+                    'time_and_duration',
+                    'spacer',
+                    'fullscreen',
+                    'playback_rate',],
+                'seekBarColors': {
+                    base: 'rgba(255, 128, 0, 0.4)',
+                    buffered: 'rgba(255, 255, 255, 0.54)',
+                    played: 'rgb(0, 255, 255)',
+                }
+            }
+            ui.configure(config);
+            const player = controls.getPlayer();
+            window.player = player; // For debugging
+            window.ui = ui;
             const errorContainer = document.getElementById('errorContainer');
             video.controls = false; // Disable default controls
 
@@ -346,7 +151,7 @@
                         response.data = await crypto.subtle.decrypt({ name: 'AES-CTR', counter: iv, length: 64 }, cryptoKey, response.data);
                     } catch (error) {
                         showError(`Decryption Error: ${error.message}`, errorContainer);
-                        throw error; 
+                        throw error;
                     }
                 }
             });
@@ -387,7 +192,7 @@
             }
 
             async function fetchIV(url) {
-                const response = await fetch(url); 
+                const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch IV from ${url}: ${response.status} ${response.statusText}`);
                 }
@@ -397,11 +202,11 @@
             // ---End Fetch Functions---
 
             // --- Error and Helper Functions ---
-            function showError(message, errorContainer) { 
+            function showError(message, errorContainer) {
                 console.error(message);
-                if (errorContainer) { 
+                if (errorContainer) {
                     errorContainer.textContent = message;
-                    errorContainer.style.display = 'block'; 
+                    errorContainer.style.display = 'block';
                 }
             }
             function createCustomButton(text, onClick) {
@@ -423,62 +228,63 @@
 
 
             // --- Video Controls and Functionality ---
-                const playPauseButton = document.getElementById('playPauseButton');
-                const forwardButton = document.getElementById('forwardButton');
-                const backwardButton = document.getElementById('backwardButton');
-                const seekBar = document.getElementById('seekBar');
-                const timeDisplay = document.getElementById('timeDisplay');
-                const volumeButton = document.getElementById('volumeButton');
-                const fullscreenButton = document.getElementById('fullscreenButton');
-                const videoContainer = document.getElementById('videoContainer');
+            const playPauseButton = document.getElementById('playPauseButton');
+            const forwardButton = document.getElementById('forwardButton');
+            const backwardButton = document.getElementById('backwardButton');
+            const seekBar = document.getElementById('seekBar');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const volumeButton = document.getElementById('volumeButton');
+            const fullscreenButton = document.getElementById('fullscreenButton');
+            const videoContainer = document.getElementById('videoContainer');
 
-                playPauseButton.addEventListener('click', () => {
-                    if (video.paused) {
-                        video.play();
-                        playPauseButton.innerHTML = '<i class="fas fa-pause"></i>';
-                    } else {
-                        video.pause();
-                        playPauseButton.innerHTML = '<i class="fas fa-play"></i>';
-                    }
-                });
-
-                forwardButton.addEventListener('click', () => {
-                    video.currentTime += 10;
-                });
-
-                backwardButton.addEventListener('click', () => {
-                    video.currentTime -= 10;
-                });
-
-                video.addEventListener('timeupdate', () => {
-                    seekBar.value = (video.currentTime / video.duration) * 100;
-                    timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
-                });
-
-                seekBar.addEventListener('input', () => {
-                    video.currentTime = (seekBar.value / 100) * video.duration;
-                });
-
-                volumeButton.addEventListener('click', () => {
-                    video.muted = !video.muted;
-                    volumeButton.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-                });
-
-                fullscreenButton.addEventListener('click', () => {
-                    if (!document.fullscreenElement) {
-                        videoContainer.requestFullscreen();
-                    } else {
-                        document.exitFullscreen();
-                    }
-                });
-
-                function formatTime(seconds) {
-                    const minutes = Math.floor(seconds / 60);
-                    const secs = Math.floor(seconds % 60);
-                    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+            playPauseButton.addEventListener('click', () => {
+                if (video.paused) {
+                    video.play();
+                    playPauseButton.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    video.pause();
+                    playPauseButton.innerHTML = '<i class="fas fa-play"></i>';
                 }
+            });
+
+            forwardButton.addEventListener('click', () => {
+                video.currentTime += 10;
+            });
+
+            backwardButton.addEventListener('click', () => {
+                video.currentTime -= 10;
+            });
+
+            video.addEventListener('timeupdate', () => {
+                seekBar.value = (video.currentTime / video.duration) * 100;
+                timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
+            });
+
+            seekBar.addEventListener('input', () => {
+                video.currentTime = (seekBar.value / 100) * video.duration;
+            });
+
+            volumeButton.addEventListener('click', () => {
+                video.muted = !video.muted;
+                volumeButton.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+            });
+
+            fullscreenButton.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    videoContainer.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+            }
             // --- End Video Controls and Functionality ---
         });
     </script>
 </body>
+
 </html>
