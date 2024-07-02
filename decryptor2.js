@@ -29,7 +29,22 @@ async function init() {
     window.ui = ui;        // For debugging
 
     player.configure({
-        // ... (Aggressive Configuration for Faster Start)
+           manifest: {
+                    lowLatencyMode: true, // Enable low-latency mode
+                    defaultPresentationDelay: 0, // Reduce initial delay
+                },
+                streaming: {
+                    rebufferingGoal: 0.1, // Aim for very low buffering
+                    bufferingGoal: 0.5, // Start playback with a small buffer
+                    safeSeekOffset: 0,  // Allow seeking to the exact position
+                    streaming.preferNativeHls: true,
+                    // retryParameters: { // Adjust as needed
+                    //     maxAttempts: 5,
+                    //     baseDelay: 100, 
+                    //     backoffFactor: 2,
+                    //     fuzzFactor: 0.5 
+                    // }
+                },
     });
 
 
