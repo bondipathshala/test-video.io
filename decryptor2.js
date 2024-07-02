@@ -37,7 +37,7 @@ async function init() {
                     rebufferingGoal: 0.1, // Aim for very low buffering
                     bufferingGoal: 0.5, // Start playback with a small buffer
                     safeSeekOffset: 0,  // Allow seeking to the exact position
-                    streaming.preferNativeHls: true,
+                    preferNativeHls: true,
                     // retryParameters: { // Adjust as needed
                     //     maxAttempts: 5,
                     //     baseDelay: 100, 
