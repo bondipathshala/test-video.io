@@ -29,25 +29,25 @@ async function init() {
     window.ui = ui;        // For debugging
 
     player.configure({
-           manifest: {
-                    lowLatencyMode: true, // Enable low-latency mode
-                    defaultPresentationDelay: 0, // Reduce initial delay
-                },
-                streaming: {
-                    rebufferingGoal: 0.1, // Aim for very low buffering
-                    bufferingGoal: 0.5, // Start playback with a small buffer
-                    safeSeekOffset: 0,  // Allow seeking to the exact position
-                    preferNativeHls: true,
-                    // retryParameters: { // Adjust as needed
-                    //     maxAttempts: 5,
-                    //     baseDelay: 100, 
-                    //     backoffFactor: 2,
-                    //     fuzzFactor: 0.5 
-                    // }
-                },
+        manifest: {
+            lowLatencyMode: true, // Enable low-latency mode
+            defaultPresentationDelay: 0, // Reduce initial delay
+        },
+        streaming: {
+            rebufferingGoal: 0.1, // Aim for very low buffering
+            bufferingGoal: 0.5, // Start playback with a small buffer
+            safeSeekOffset: 0,  // Allow seeking to the exact position
+            // retryParameters: { // Adjust as needed
+            //     maxAttempts: 5,
+            //     baseDelay: 100, 
+            //     backoffFactor: 2,
+            //     fuzzFactor: 0.5 
+            // }
+        },
+        abr: {
+            enabled: true, // Adapt to network conditions (if applicable)
+        }
     });
-
-
     // Decryption filter
     player.getNetworkingEngine().registerResponseFilter(async (type, response) => {
         if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT) {
@@ -57,33 +57,34 @@ async function init() {
                 response.data = await crypto.subtle.decrypt({ name: 'AES-CTR', counter: iv, length: 64 }, cryptoKey, response.data);
             } catch (error) {
                 showError(`Decryption Error: ${error.message}`, errorContainer);
-                throw error;
+                throw error; 
             }
         }
     });
 
-    try {
-        await player.load(manifestUri);
-    } catch (error) {
-        showError(`Error loading video: ${getShakaErrorMessage(error)}`, errorContainer);
-    }
+    player.load(manifestUri)
+    .then(() => console.log('Video loaded successfully!'))
+    .catch(error => showError(`Error loading video: ${getShakaErrorMessage(error)}`));
 
-    async function fetchKey(url) {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch key from ${url}: ${response.status} ${response.statusText}`);
-        }
-        return await response.arrayBuffer();
+// Fetch key function (adjust for your authentication/storage method if needed)
+async function fetchKey(url) {
+    const response = await fetch(url); // Or use your own fetching method
+    if (!response.ok) {
+        throw new Error(`Failed to fetch key from ${url}: ${response.status} ${response.statusText}`);
     }
+    return await response.arrayBuffer();
+}
 
-    async function fetchIV(url) {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch IV from ${url}: ${response.status} ${response.statusText}`);
-        }
-        const ivHex = await response.text();
-        return new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+// Fetch IV function (adjust if you use a different IV delivery mechanism)
+async function fetchIV(url) {
+    const response = await fetch(url); // Or use your own fetching method
+    if (!response.ok) {
+        throw new Error(`Failed to fetch IV from ${url}: ${response.status} ${response.statusText}`);
     }
+    const ivHex = await response.text();
+    return new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+}
+
     // ---End Fetch Functions---
 
     // --- Error and Helper Functions ---
