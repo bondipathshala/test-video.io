@@ -7,7 +7,7 @@ async function init() {
     const ui = video['ui'];
     const controls = ui.getControls();
     const config = {
-        'enableTooltips' : true,
+        'enableTooltips': true,
         'controlPanelElements': [
             'play_pause',
             'mute',
@@ -16,13 +16,13 @@ async function init() {
             'spacer',
             'fullscreen',
             'playback_rate',],
-            'seekBarColors': {
-     base: 'rgba(255, 128, 0, 0.4)',
+        'seekBarColors': {
+            base: 'rgba(255, 128, 0, 0.4)',
             buffered: 'rgba(255, 255, 255, 0.54)',
             played: 'rgb(0, 255, 255)',
- }
-      }
-      ui.configure(config);
+        }
+    }
+    ui.configure(config);
     const player = controls.getPlayer();
     const errorContainer = document.getElementById('errorContainer');
     window.player = player; // For debugging
@@ -31,7 +31,7 @@ async function init() {
     player.configure({
         // ... (Aggressive Configuration for Faster Start)
     });
-    
+
 
     // Decryption filter
     player.getNetworkingEngine().registerResponseFilter(async (type, response) => {
