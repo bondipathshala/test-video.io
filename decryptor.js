@@ -30,6 +30,9 @@ async function init() {
 
     player.configure({
         // ... (Aggressive Configuration for Faster Start)
+        abr: { enabled: false }, // Disable adaptive bitrate
+        manifest: { dash: { defaultPresentationDelay: 5 }}, // Adjust for iOS
+        streaming: { useNativeHlsOnSafari: true } 
     });
 
 
