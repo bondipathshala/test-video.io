@@ -7,86 +7,14 @@
     <script src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.ui.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/shaka-player/dist/controls.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        body {
-            background-color: black;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        #videoContainer {
-            position: relative;
-            width: 80%;
-            max-width: 800px;
-            background-color: black;
-        }
-
-        #video {
-            width: 100%;
-            height: auto;
-        }
-
-        #controlsContainer {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            visibility: hidden;
-            /* Hide initially */
-        }
-
-        #videoContainer:hover #controlsContainer,
-        #controlsContainer:hover {
-            visibility: visible;
-            /* Show on hover */
-        }
-
-        .controlButton {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        #seekBar {
-            flex-grow: 1;
-            margin: 0 10px;
-            appearance: none;
-            width: 100%;
-            height: 5px;
-            background: #ccc;
-            outline: none;
-            cursor: pointer;
-        }
-
-        #seekBar::-webkit-slider-thumb {
-            appearance: none;
-            width: 10px;
-            height: 10px;
-            background: #fff;
-            cursor: pointer;
-        }
-
-        #timeDisplay {
-            color: white;
-            font-size: 14px;
-        }
-    </style>
+   <link rel="stylesheet" href="vid.css">
 </head>
 
 <body>
-        <div data-shaka-player-container style="max-width:80em;" class="youtube-theme">
-            <video data-shaka-player autoplay style="width:100%;height:100%;"></video>
-        </div>
-        <div id="errorContainer" style="display: none; color: red;"></div>
+    <div data-shaka-player-container style="max-width:80em;" class="youtube-theme">
+        <video data-shaka-player autoplay style="width:100%;height:100%;"></video>
+    </div>
+    <div id="errorContainer" style="display: none; color: red;"></div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const manifestUri = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/manifest.m3u8';
@@ -219,8 +147,8 @@
 
             // --- Video Controls and Functionality ---
             const playPauseButton = document.getElementById('playPauseButton');
-            const forwardButton = document.getElementById('forwardButton');
-            const backwardButton = document.getElementById('backwardButton');
+           // const forwardButton = document.getElementById('forwardButton');
+            //const backwardButton = document.getElementById('backwardButton');
             const seekBar = document.getElementById('seekBar');
             const timeDisplay = document.getElementById('timeDisplay');
             const volumeButton = document.getElementById('volumeButton');
@@ -236,14 +164,7 @@
                 }
             });
 
-            forwardButton.addEventListener('click', () => {
-                video.currentTime += 10;
-            });
-
-            backwardButton.addEventListener('click', () => {
-                video.currentTime -= 10;
-            });
-
+           //
             video.addEventListener('timeupdate', () => {
                 seekBar.value = (video.currentTime / video.duration) * 100;
                 timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
