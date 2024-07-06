@@ -30,7 +30,7 @@ async function init() {
 
     player.configure({
         // ... (Aggressive Configuration for Faster Start)
-        streaming: { useNativeHlsOnSafari: true } 
+        streaming: { preferNativeHls: true, } 
     });
 
 
