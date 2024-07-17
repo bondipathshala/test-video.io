@@ -1,6 +1,6 @@
-const manifestUri = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/manifest.m3u8';
-const keyUrl = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/enc.key';
-const ivUrl = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/enc.iv';
+const manifestUri = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/manifest.m3u8';
+const keyUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/enc.key';
+const ivUrl = 'https://pub-4500d0da786d452db5b86ca12b54a6f4.r2.dev/enc.iv';
 
 async function init() {
     const video = document.querySelector('video[data-shaka-player]');
@@ -29,24 +29,8 @@ async function init() {
     window.ui = ui;        // For debugging
 
     player.configure({
-        manifest: {
-            lowLatencyMode: true, // Enable low-latency mode
-            defaultPresentationDelay: 0, // Reduce initial delay
-        },
-        streaming: {
-            rebufferingGoal: 0.1, // Aim for very low buffering
-            bufferingGoal: 0.5, // Start playback with a small buffer
-            safeSeekOffset: 0,  // Allow seeking to the exact position
-            // retryParameters: { // Adjust as needed
-            //     maxAttempts: 5,
-            //     baseDelay: 100, 
-            //     backoffFactor: 2,
-            //     fuzzFactor: 0.5 
-            // }
-        },
-        abr: {
-            enabled: true, // Adapt to network conditions (if applicable)
-        }
+        // ... (Aggressive Configuration for Faster Start)
+        manifest: { dash: { defaultPresentationDelay: 5 }},
     });
 
 
