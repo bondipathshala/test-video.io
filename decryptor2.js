@@ -34,7 +34,7 @@ async function init() {
          streaming: {
                 bufferingGoal: 120,
                 bufferBehind: 360,
-                evictionGoal: 120,
+                evictionGoal: 360,
               }
     });
 
