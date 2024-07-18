@@ -31,7 +31,11 @@ async function init() {
     player.configure({
         // ... (Aggressive Configuration for Faster Start)
         manifest: { dash: { defaultPresentationDelay: 5 }},
-        streaming: {bufferingGoal: 120}
+         streaming: {
+                bufferingGoal: 120,
+                bufferBehind: 360,
+                evictionGoal: 120,
+              }
     });
 
 
