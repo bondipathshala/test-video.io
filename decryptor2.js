@@ -2,7 +2,7 @@ const manifestUri = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/manifes
 const keyUrl = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/enc.key';
 const ivUrl = 'https://pub-eeced94fdab94110a30e8752066fa833.r2.dev/enc.iv';
 
-async function initial() {
+async function init() {
     const video = document.querySelector('video[data-shaka-player]');
     const ui = video['ui'];
     const controls = ui.getControls();
@@ -29,25 +29,11 @@ async function initial() {
     window.ui = ui;        // For debugging
 
     player.configure({
-        manifest: {
-            lowLatencyMode: true, // Enable low-latency mode
-            defaultPresentationDelay: 0, // Reduce initial delay
-        },
-        streaming: {
-            rebufferingGoal: 0.1, // Aim for very low buffering
-            bufferingGoal: 0.5, // Start playback with a small buffer
-            safeSeekOffset: 0,  // Allow seeking to the exact position
-            // retryParameters: { // Adjust as needed
-            //     maxAttempts: 5,
-            //     baseDelay: 100, 
-            //     backoffFactor: 2,
-            //     fuzzFactor: 0.5 
-            // }
-        },
-        abr: {
-            enabled: true, // Adapt to network conditions (if applicable)
-        }
+        // ... (Aggressive Configuration for Faster Start)
+        manifest: { dash: { defaultPresentationDelay: 5 }},
     });
+
+
     // Decryption filter
     player.getNetworkingEngine().registerResponseFilter(async (type, response) => {
         if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT) {
@@ -57,34 +43,33 @@ async function initial() {
                 response.data = await crypto.subtle.decrypt({ name: 'AES-CTR', counter: iv, length: 64 }, cryptoKey, response.data);
             } catch (error) {
                 showError(`Decryption Error: ${error.message}`, errorContainer);
-                throw error; 
+                throw error;
             }
         }
     });
 
-    player.load(manifestUri)
-    .then(() => console.log('Video loaded successfully!'))
-    .catch(error => showError(`Error loading video: ${getShakaErrorMessage(error)}`));
-
-// Fetch key function (adjust for your authentication/storage method if needed)
-async function fetchKey(url) {
-    const response = await fetch(url); // Or use your own fetching method
-    if (!response.ok) {
-        throw new Error(`Failed to fetch key from ${url}: ${response.status} ${response.statusText}`);
+    try {
+        await player.load(manifestUri);
+    } catch (error) {
+        showError(`Error loading video: ${getShakaErrorMessage(error)}`, errorContainer);
     }
-    return await response.arrayBuffer();
-}
 
-// Fetch IV function (adjust if you use a different IV delivery mechanism)
-async function fetchIV(url) {
-    const response = await fetch(url); // Or use your own fetching method
-    if (!response.ok) {
-        throw new Error(`Failed to fetch IV from ${url}: ${response.status} ${response.statusText}`);
+    async function fetchKey(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch key from ${url}: ${response.status} ${response.statusText}`);
+        }
+        return await response.arrayBuffer();
     }
-    const ivHex = await response.text();
-    return new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-}
 
+    async function fetchIV(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch IV from ${url}: ${response.status} ${response.statusText}`);
+        }
+        const ivHex = await response.text();
+        return new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    }
     // ---End Fetch Functions---
 
     // --- Error and Helper Functions ---
@@ -113,14 +98,12 @@ async function fetchIV(url) {
 }
 
 // Event Listeners
-document.addEventListener('shaka-ui-loaded', initial);
+document.addEventListener('shaka-ui-loaded', init);
 document.addEventListener('shaka-ui-load-failed', initFailed);
 
 function initFailed(errorEvent) {
     console.error('Unable to load the UI library!', errorEvent.detail);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    initial()
-});
+
 // --- End Video Controls and Functionality ---
