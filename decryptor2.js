@@ -32,10 +32,10 @@ async function init() {
         // ... (Aggressive Configuration for Faster Start)
         manifest: { dash: { defaultPresentationDelay: 5 }},
          streaming: {
-                bufferingGoal: 120,
-                bufferBehind: 360,
-                evictionGoal: 360,
-              }
+            bufferingGoal: 120,
+            bufferBehind: 180,
+            evictionGoal: 120, 
+        }
     });
 
 
