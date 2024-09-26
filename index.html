@@ -1,19 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.ui.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/shaka-player/dist/controls.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></script>
-    <link rel="stylesheet" href="vid.css">
-    <script src="decryptor.js"></script>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Live Streaming with Chat</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+
+        .stream-container {
+            display: flex;
+            flex-direction: row;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+
+        .video {
+            flex: 3;
+            min-width: 600px;
+            border-right: 1px solid #ddd;
+        }
+
+        .chat {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
     </style>
 </head>
 <body>
-  <div data-shaka-player-container style="max-width:80em;" class="youtube-theme">
-    <video data-shaka-player autoplay style="width:100%;height:100%;"></video>
-  </div>
 
-  <div id="errorContainer" style="display: none; color: red;"></div>
+<div class="stream-container">
+    <!-- YouTube Live Video Embed -->
+    <div class="video">
+        <iframe id="video-frame"
+            src=""
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <!-- YouTube Live Chat Embed -->
+    <div class="chat">
+        <iframe id="chat-frame"
+            src=""
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture"
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<script>
+    // Function to get query parameters from the URL
+    function getQueryParameter(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    // Get the video ID from the URL parameter 'vid'
+    const videoId = getQueryParameter('vid');
+
+    if (videoId) {
+        // Set the video and chat iframe sources using the video ID
+        document.getElementById('video-frame').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        document.getElementById('chat-frame').src = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`;
+    } else {
+        alert('Video ID not found in the URL.');
+    }
+</script>
+
 </body>
 </html>
