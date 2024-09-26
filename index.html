@@ -78,7 +78,7 @@
 
     if (videoId) {
         // Set the video and chat iframe sources using the video ID
-        document.getElementById('video-frame').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        document.getElementById('video-frame').src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
         document.getElementById('chat-frame').src = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`;
     } else {
         alert('Video ID not found in the URL.');
